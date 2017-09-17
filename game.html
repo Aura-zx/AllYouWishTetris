@@ -13,7 +13,7 @@
 <body>
   <script>
     var log = console.log.bind(console)
-    var imgFromPath = function(path){
+    var imgFromPath = function(path) {
       var img = new Image()
       img.src = path
       return img
@@ -22,7 +22,7 @@
     var Panel = function(){
       var image = imgFromPath('panel.png')
       var o = {
-        //image = image,
+        image : image,
         x : 0,
         y : 0,
       }
@@ -32,29 +32,53 @@
     var Block = function(){
       var image = imgFromPath('block.png')
       var o = {
-        //image = image,
+        image : image,
         x : 100,
         y : 17,
+        speed : 5,
+      }
+
+      var block = o
+      o.movedown = function(){
+        block.y += block.speed
+      }
+      o.moveleft = function(){
+        block.x -= block.speed
+      }
+      o.moveright = function(){
+        block.x += block.speed
       }
       return o
     }
 
-
-    var __main = function(){
+    var GuaGame = function(){
+      var g = {}
       var canvas = document.querySelector("#id-canvas")
       var context = canvas.getContext('2d')
+      g.canvas = canvas
+      g.context = context
 
-      var panel = Panel()
-      var rect = Block()
-
-      x = 100
-      y = 17
-      speed = 5
-      var img = new Image()
-      img.src = 'block.png'
-      img.onload = function() {
-        context.drawImage(img, x, y)
+      g.drawImage = function(guaImage) {
+        g.context.drawImage(guaImage.image, guaImage.x, guaImage.y)
       }
+
+      setInterval(function(){
+        // draw
+        g.update()
+        // clear
+        context.clearRect(0, 0, canvas.width, canvas.height)
+        // draw
+        g.draw()
+      }, 1000/30)
+
+      return g;
+    }
+
+    var __main = function(){
+      var game = GuaGame()
+
+      // var panel = Panel()
+      var block = Block()
 
       var leftDown = false
       var rightDown = false
@@ -81,17 +105,19 @@
         }
       })
 
-      setInterval(function(){
-        // update x
+      game.update = function(){
+        // update
+        block.movedown()
         if(leftDown){
-          x -= 10
+          block.moveleft()
         } else if(rightDown){
-          x += 10
+          block.moveright()
         }
-        // draw
-        context.clearRect(0, 0, canvas.width, canvas.height)
-        context.drawImage(img, x, y)
-      }, 1000/30)
+      }
+
+      game.draw = function(){
+        game.drawImage(block)
+      }
     }
     
     __main()
