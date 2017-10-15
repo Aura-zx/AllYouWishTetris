@@ -5,7 +5,7 @@
   <title>All You Wish Tetris</title>
   <style media="screen">
     canvas{
-      border: 1px black solid;
+      border: 1px rgb(0, 0, 0) solid;
     }
   </style>
 </head>
@@ -29,24 +29,30 @@
       return o
     }
 
-    var Block = function(){
+    var Block = function(game){
       var image = imgFromPath('block.png')
       var o = {
-        image : image,
+        img : image,
         x : 100,
-        y : 17,
-        speed : 5,
+        y : 20,
+        w : 20,
+        h : 20,
+        speedX : 20,
+        speedY : 10,
+        stopped : false,
       }
 
-      var block = o
       o.movedown = function(){
-        block.y += block.speed
+        o.y += o.speedY
       }
       o.moveleft = function(){
-        block.x -= block.speed
+        o.x -= o.speedX
       }
       o.moveright = function(){
-        block.x += block.speed
+        o.x += o.speedX
+      }
+      o.stop = function(){
+        o.stopped = true
       }
       return o
     }
@@ -55,6 +61,8 @@
       var g = {
         actions: {},
         keydowns: {},
+        blocks: [],
+        paused: false,
       }
       var canvas = document.querySelector("#id-canvas")
       var context = canvas.getContext('2d')
@@ -62,7 +70,7 @@
       g.context = context
       // draw
       g.drawImage = function(guaImage) {
-        g.context.drawImage(guaImage.image, guaImage.x, guaImage.y)
+        g.context.drawImage(guaImage.img, guaImage.x, guaImage.y)
       }
       // events
       window.addEventListener('keydown', function(event){
@@ -75,24 +83,34 @@
       g.registerAction = function(key, callback){
         g.actions[key] = callback
       }
+
+      var curblock = Block()
+      g.blocks.push(curblock)
+
       // timer
-      setInterval(function(){
+      setInterval(function() {
         // events
         var actions = Object.keys(g.actions)
         for (var i = 0; i < actions.length; i++) {
             var key = actions[i]
             if(g.keydowns[key]) {
                 // 如果按键被按下, 调用注册的 action
-                g.actions[key]()
+                g.actions[key](curblock)
             }
         }
+
+        if (curblock.stopped == true) {
+          curblock = Block()
+          g.blocks.push(curblock)
+        }
+            
         // draw
-        g.update()
+        g.update(curblock, g.blocks)
         // clear
         context.clearRect(0, 0, canvas.width, canvas.height)
         // draw
-        g.draw()
-      }, 1000/30)
+        g.draw(curblock, g.blocks)
+      }, 1000/10)
 
       return g;
     }
@@ -100,23 +118,38 @@
     var __main = function(){
       var game = GuaGame()
 
-      // var panel = Panel()
-      var block = Block()
-
-      game.registerAction('a', function(){
+      game.registerAction('a', function(block){
         block.moveleft()
       })
-      game.registerAction('d', function(){
+      game.registerAction('d', function(block){
         block.moveright()
       })
+      // pasue key
+      game.registerAction('p', function(){
+        game.paused = !game.paused
+      })
 
-      game.update = function(){
+      game.update = function(block, blocks){
+        if(game.paused){
+          return
+        }
         // update
         block.movedown()
+        log(block.y)
+        for(var i = 0; i < blocks.length-1; i++){
+          if((block.x == blocks[i].x) && (block.y + block.h/2) == (blocks[i].y-blocks[i].h/2)){
+            block.stop()
+          }
+        }
+        if (block.y > 300){
+          block.stop()
+        }
       }
 
-      game.draw = function(){
-        game.drawImage(block)
+      game.draw = function(block, blocks){
+        for(var i = 0; i < blocks.length; i++){
+          game.drawImage(blocks[i])
+        }
       }
     }
     
