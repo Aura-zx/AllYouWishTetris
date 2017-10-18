@@ -30,7 +30,7 @@
     }
 
     var Block = function(game){
-      var image = imgFromPath('block.png')
+      var image = imgFromPath('red.png')
       var o = {
         img : image,
         x : 100,
@@ -57,12 +57,57 @@
       return o
     }
 
+    var TypeI = function(game){
+      var image = imgFromPath('red.png')
+      var o = {
+        blocks : [],
+        x : 100,
+        y : 20,
+        speedX : 20,
+        speedY : 10,
+        stopped : false,
+        top : 0,
+        down : 0,
+      }
+
+      o.blocks[0] = Block()
+      for(var i = 1; i < 4; i++){
+        var block = Block()
+        o.blocks.push(block)
+        o.blocks[i].x = o.blocks[i-1].x + 10
+      }
+      o.top = o.blocks[0].y - 10
+      o.down = o.blocks[3].y + 10
+
+      o.movedown = function(){
+        o.blocks.forEach(function(o) {
+          o.y += o.speedY
+        }, this)
+        o.down += o.speedY
+      }
+      o.moveleft = function(){
+        o.blocks.forEach(function(o){
+          o.x -= o.speedX
+        }, this)
+      }
+      o.moveright = function(){
+        o.blocks.forEach(function(o){
+          o.x += o.speedX
+        }, this)
+      }
+      o.stop = function(){
+        o.stopped = true
+      }
+      return o
+    }
+
     var GuaGame = function(){
       var g = {
-        actions: {},
-        keydowns: {},
-        blocks: [],
-        paused: false,
+        actions : {},
+        keydowns : {},
+        blocks : [],
+        paused : false,
+        types : [],
       }
       var canvas = document.querySelector("#id-canvas")
       var context = canvas.getContext('2d')
@@ -71,6 +116,11 @@
       // draw
       g.drawImage = function(guaImage) {
         g.context.drawImage(guaImage.img, guaImage.x, guaImage.y)
+      }
+      g.drawImages = function(type) {
+        type.blocks.forEach(function(block){
+          g.context.drawImage(block.img, block.x, block.y)
+        }, this)
       }
       // events
       window.addEventListener('keydown', function(event){
@@ -84,8 +134,8 @@
         g.actions[key] = callback
       }
 
-      var curblock = Block()
-      g.blocks.push(curblock)
+      var curtype = TypeI()
+      g.types.push(curtype)
 
       // timer
       setInterval(function() {
@@ -95,21 +145,21 @@
             var key = actions[i]
             if(g.keydowns[key]) {
                 // 如果按键被按下, 调用注册的 action
-                g.actions[key](curblock)
+                g.actions[key](curtype)
             }
         }
 
-        if (curblock.stopped == true) {
-          curblock = Block()
-          g.blocks.push(curblock)
+        if (curtype.stopped == true) {
+          curtype = TypeI()
+          g.types.push(curtype)
         }
             
         // draw
-        g.update(curblock, g.blocks)
+        g.updateType(curtype, g.types)
         // clear
         context.clearRect(0, 0, canvas.width, canvas.height)
         // draw
-        g.draw(curblock, g.blocks)
+        g.drawType(curtype, g.types)
       }, 1000/10)
 
       return g;
@@ -151,8 +201,30 @@
           game.drawImage(blocks[i])
         }
       }
+
+      
+      game.updateType = function(type, types){
+        if(game.paused){
+          return
+        }
+        // update
+        type.movedown()
+        log(type.down)
+        for(var i = 0; i < types.length-1; i++){
+
+        }
+        if (type.down > 300){
+          type.stop()
+        }
+      }
+          
+      game.drawType = function(type, types){
+        for(var i = 0; i < types.length; i++){
+            game.drawImages(types[i])
+        }
+      }
     }
-    
+
     __main()
   </script>
 </body>
