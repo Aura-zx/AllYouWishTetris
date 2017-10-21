@@ -37,7 +37,7 @@
         y : 20,
         w : 10,
         h : 10,
-        speedX : 20,
+        speedX : 10,
         speedY : 10,
         stopped : false,
       }
@@ -63,11 +63,12 @@
         blocks : [],
         x : 100,
         y : 20,
-        speedX : 20,
+        speedX : 10,
         speedY : 10,
         stopped : false,
         top : [],
         bottom : [],
+        status : 2,
       }
 
       o.blocks[0] = Block()
@@ -77,15 +78,15 @@
         o.blocks[i].x = o.blocks[i-1].x + 10
       }
       o.blocks.sort(function(a, b){
-        return a.y - b.y
+        return b.y - a.y
       })
       o.blocks.forEach(function(b){
         var max = o.blocks[0].y
         var min = o.blocks[3].y
-        if (b.y == max){
+        if (b.y == min){
           o.top.push(b)
         } 
-        if (b.y == min){
+        if (b.y == max){
           o.bottom.push(b)
         }
       })
@@ -104,6 +105,53 @@
         o.blocks.forEach(function(o){
           o.x += o.speedX
         }, this)
+      }
+      o.rotate = function(){
+        if (o.status == 1){
+          o.status = 2
+          for(var i = 1; i < 4; i++){
+          o.blocks[i].x = o.blocks[0].x;
+          o.blocks[i].y = o.blocks[i-1].y + 10;
+          }
+          o.blocks.sort(function(a, b){
+            return b.y - a.y
+          })
+          // reset top & bottom
+          o.top = []
+          o.bottom = []
+          var max = o.blocks[0].y
+          var min = o.blocks[3].y
+          o.blocks.forEach(function(b){
+            if (b.y == min){
+              o.top.push(b)
+            } 
+            if (b.y == max){
+              o.bottom.push(b)
+            }
+          })
+        } else if (o.status == 2){
+          o.status = 1
+          for(var i = 1; i < 4; i++){
+            o.blocks[i].y = o.blocks[0].y
+            o.blocks[i].x = o.blocks[i-1].x + 10;
+          }
+          o.blocks.sort(function(a, b){
+            return b.x - a.x // desc
+          })
+          // reset top & bottom
+          o.top = []
+          o.bottom = []
+          var max = o.blocks[0].x
+          var min = o.blocks[3].x
+          o.blocks.forEach(function(b){
+            if (b.x == min){
+              o.top.push(b)
+            } 
+            if (b.x == max){
+              o.bottom.push(b)
+            }
+          })
+        }
       }
       o.stop = function(){
         o.stopped = true
@@ -184,6 +232,9 @@
       game.registerAction('d', function(block){
         block.moveright()
       })
+      game.registerAction('w', function(type){
+        type.rotate()
+      })
       // pasue key
       game.registerAction('p', function(){
         game.paused = !game.paused
@@ -239,9 +290,14 @@
       game.collide = function(move, fixed){
         var h = move.bottom[0].h
         // 底部碰到顶部
-        if(move.bottom[0].x == fixed.top[0].x){
-          if(move.bottom[0].y + h/2  == fixed.top[0].y - h/2){
-            return true
+
+        for(var i = 0; i < move.bottom.length; i++){
+          for(var j = 0; j < fixed.top.length; j++){
+            if(move.bottom[i].x == fixed.top[j].x){
+              if(move.bottom[i].y + h/2  == fixed.top[j].y - h/2){
+                return true
+              }
+            }
           }
         }
         // 顶部碰到顶部
