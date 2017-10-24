@@ -219,9 +219,7 @@
 
       var curtype = TypeI()
       g.types.push(curtype)
-      curtype.blocks.forEach(function (b) {
-        g.blocks.push(b)
-      })
+
       // timer
       setInterval(function () {
         // events
@@ -235,11 +233,11 @@
         }
 
         if (curtype.stopped == true) {
-          curtype = TypeI()
-          g.types.push(curtype)
           curtype.blocks.forEach(function (b) {
             g.blocks.push(b)
           })
+          curtype = TypeI()
+          g.types.push(curtype)
         }
 
         // draw
