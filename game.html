@@ -72,7 +72,7 @@
         bottom: [],
         left: null,
         right: null,
-        status: 2,
+        status: 1,
       }
 
       o.blocks[0] = Block()
@@ -182,7 +182,6 @@
       var g = {
         actions: {},
         keydowns: {},
-        blocks: [],
         paused: false,
         types: [],
       }
@@ -190,9 +189,10 @@
       var context = canvas.getContext('2d')
       g.canvas = canvas
       g.context = context
+      g.blocks = new Map()
 
       g.refresh = function () {
-
+        
       }
       // draw
       g.drawImage = function (guaImage) {
@@ -234,7 +234,12 @@
 
         if (curtype.stopped == true) {
           curtype.blocks.forEach(function (b) {
-            g.blocks.push(b)
+            if (g.blocks[b.y]){
+              g.blocks[b.y].push(b)
+            } else {
+              g.blocks[b.y] = []
+              g.blocks[b.y].push(b)
+            }
           })
           curtype = TypeI()
           g.types.push(curtype)
@@ -302,10 +307,12 @@
         for (var i = 0; i < types.length - 1; i++) {
           if (game.collide(type, types[i])) {
             type.stop()
+            game.refresh()
           }
         }
         if (type.bottom[0].y > 300) {
           type.stop()
+          game.refresh()
         }
       }
 
