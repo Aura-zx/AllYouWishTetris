@@ -4,155 +4,342 @@
   <meta charset="UTF-8">
   <title>All You Wish Tetris</title>
   <style media="screen">
-    canvas{
+    canvas {
       border: 1px rgb(0, 0, 0) solid;
     }
   </style>
 </head>
-  <canvas id="id-canvas" width="400" height="400"></canvas>
+<canvas id="id-canvas" width="400" height="400"></canvas>
+
 <body>
   <script>
     var log = console.log.bind(console)
-    var imgFromPath = function(path) {
+    var imgFromPath = function (path) {
       var img = new Image()
       img.src = path
       return img
     }
 
-    var Panel = function(){
+    var Panel = function () {
       var image = imgFromPath('panel.png')
       var o = {
-        image : image,
-        x : 0,
-        y : 0,
+        image: image,
+        x: 0,
+        y: 0,
       }
       return o
     }
 
-    var Block = function(game){
-      var image = imgFromPath('block.png')
+    var Block = function (game) {
+      var image = imgFromPath('red.png')
       var o = {
-        img : image,
-        x : 100,
-        y : 20,
-        w : 20,
-        h : 20,
-        speedX : 20,
-        speedY : 10,
-        stopped : false,
+        img: image,
+        x: 100,
+        y: 20,
+        w: 10,
+        h: 10,
+        speedX: 10,
+        speedY: 10,
+        stopped: false,
+        alive: true,
       }
 
-      o.movedown = function(){
+      o.movedown = function () {
         o.y += o.speedY
       }
-      o.moveleft = function(){
+      o.moveleft = function () {
         o.x -= o.speedX
       }
-      o.moveright = function(){
+      o.moveright = function () {
         o.x += o.speedX
       }
-      o.stop = function(){
+      o.stop = function () {
         o.stopped = true
       }
       return o
     }
 
-    var GuaGame = function(){
+    var TypeI = function (game) {
+      var image = imgFromPath('red.png')
+      var o = {
+        blocks: [],
+        x: 100,
+        y: 20,
+        speedX: 10,
+        speedY: 10,
+        stopped: false,
+        top: [],
+        bottom: [],
+        left: null,
+        right: null,
+        status: 1,
+      }
+
+      o.blocks[0] = Block()
+      for (var i = 1; i < 4; i++) {
+        var block = Block()
+        o.blocks.push(block)
+        o.blocks[i].x = o.blocks[i - 1].x + 10
+      }
+      // 获得左右的块
+      o.blocks.sort(function (a, b) {
+        return b.x - a.x
+      })
+      o.right = o.blocks[0]
+      o.left = o.blocks[3]
+      // 获得上下的块
+      o.blocks.sort(function (a, b) {
+        return b.y - a.y
+      })
+      o.blocks.forEach(function (b) {
+        var max = o.blocks[0].y
+        var min = o.blocks[3].y
+        if (b.y == min) {
+          o.top.push(b)
+        }
+        if (b.y == max) {
+          o.bottom.push(b)
+        }
+      })
+
+      o.movedown = function () {
+        o.blocks.forEach(function (o) {
+          o.y += o.speedY
+        }, this)
+      }
+      o.moveleft = function () {
+        log(o.left.x)
+        if (o.left.x - o.speedX == 50) {
+          return
+        }
+        o.blocks.forEach(function (o) {
+          o.x -= o.speedX
+        }, this)
+      }
+      o.moveright = function () {
+        log(o.right.x)
+        if (o.right.x + o.speedX == 200) {
+          return
+        }
+        o.blocks.forEach(function (o) {
+          o.x += o.speedX
+        }, this)
+      }
+      o.rotate = function () {
+        if (o.status == 1) {
+          o.status = 2
+          for (var i = 1; i < 4; i++) {
+            o.blocks[i].x = o.blocks[0].x;
+            o.blocks[i].y = o.blocks[i - 1].y + 10;
+          }
+          o.blocks.sort(function (a, b) {
+            return b.y - a.y
+          })
+          // reset top & bottom
+          o.top = []
+          o.bottom = []
+          var max = o.blocks[0].y
+          var min = o.blocks[3].y
+          o.blocks.forEach(function (b) {
+            if (b.y == min) {
+              o.top.push(b)
+            }
+            if (b.y == max) {
+              o.bottom.push(b)
+            }
+          })
+        } else if (o.status == 2) {
+          o.status = 1
+          for (var i = 1; i < 4; i++) {
+            o.blocks[i].y = o.blocks[0].y
+            o.blocks[i].x = o.blocks[i - 1].x + 10;
+          }
+          o.blocks.sort(function (a, b) {
+            return b.x - a.x // desc
+          })
+          // reset top & bottom
+          o.top = []
+          o.bottom = []
+          var max = o.blocks[0].x
+          var min = o.blocks[3].x
+          o.blocks.forEach(function (b) {
+            if (b.x == min) {
+              o.top.push(b)
+            }
+            if (b.x == max) {
+              o.bottom.push(b)
+            }
+          })
+        }
+      }
+      o.stop = function () {
+        o.stopped = true
+      }
+      return o
+    }
+
+    var GuaGame = function () {
       var g = {
         actions: {},
         keydowns: {},
-        blocks: [],
         paused: false,
+        types: [],
       }
       var canvas = document.querySelector("#id-canvas")
       var context = canvas.getContext('2d')
       g.canvas = canvas
       g.context = context
+      g.blocks = new Map()
+
+      g.refresh = function () {
+        
+      }
       // draw
-      g.drawImage = function(guaImage) {
+      g.drawImage = function (guaImage) {
         g.context.drawImage(guaImage.img, guaImage.x, guaImage.y)
       }
+      g.drawImages = function (type) {
+        type.blocks.forEach(function (block) {
+          if (block.alive == true) {
+            g.context.drawImage(block.img, block.x, block.y)
+          }
+        }, this)
+      }
       // events
-      window.addEventListener('keydown', function(event){
+      window.addEventListener('keydown', function (event) {
         g.keydowns[event.key] = true
       })
-      window.addEventListener('keyup', function(event){
+      window.addEventListener('keyup', function (event) {
         g.keydowns[event.key] = false
       })
       // 
-      g.registerAction = function(key, callback){
+      g.registerAction = function (key, callback) {
         g.actions[key] = callback
       }
 
-      var curblock = Block()
-      g.blocks.push(curblock)
+      var curtype = TypeI()
+      g.types.push(curtype)
 
       // timer
-      setInterval(function() {
+      setInterval(function () {
         // events
         var actions = Object.keys(g.actions)
         for (var i = 0; i < actions.length; i++) {
-            var key = actions[i]
-            if(g.keydowns[key]) {
-                // 如果按键被按下, 调用注册的 action
-                g.actions[key](curblock)
-            }
+          var key = actions[i]
+          if (g.keydowns[key]) {
+            // 如果按键被按下, 调用注册的 action
+            g.actions[key](curtype)
+          }
         }
 
-        if (curblock.stopped == true) {
-          curblock = Block()
-          g.blocks.push(curblock)
+        if (curtype.stopped == true) {
+          curtype.blocks.forEach(function (b) {
+            if (g.blocks[b.y]){
+              g.blocks[b.y].push(b)
+            } else {
+              g.blocks[b.y] = []
+              g.blocks[b.y].push(b)
+            }
+          })
+          curtype = TypeI()
+          g.types.push(curtype)
         }
-            
+
         // draw
-        g.update(curblock, g.blocks)
+        g.updateType(curtype, g.types)
         // clear
         context.clearRect(0, 0, canvas.width, canvas.height)
         // draw
-        g.draw(curblock, g.blocks)
-      }, 1000/10)
+        g.drawType(curtype, g.types)
+      }, 1000 / 10)
 
       return g;
     }
 
-    var __main = function(){
+    var __main = function () {
       var game = GuaGame()
 
-      game.registerAction('a', function(block){
+      game.registerAction('a', function (block) {
         block.moveleft()
       })
-      game.registerAction('d', function(block){
+      game.registerAction('d', function (block) {
         block.moveright()
       })
+      game.registerAction('w', function (type) {
+        type.rotate()
+      })
       // pasue key
-      game.registerAction('p', function(){
+      game.registerAction('p', function () {
         game.paused = !game.paused
       })
 
-      game.update = function(block, blocks){
-        if(game.paused){
+      game.update = function (block, blocks) {
+        if (game.paused) {
           return
         }
         // update
         block.movedown()
-        log(block.y)
-        for(var i = 0; i < blocks.length-1; i++){
-          if((block.x == blocks[i].x) && (block.y + block.h/2) == (blocks[i].y-blocks[i].h/2)){
+        //log(block.y)
+        for (var i = 0; i < blocks.length - 1; i++) {
+          if ((block.x == blocks[i].x) && (block.y + block.h / 2) == (blocks[i].y - blocks[i].h / 2)) {
             block.stop()
           }
         }
-        if (block.y > 300){
+        if (block.y > 300) {
           block.stop()
         }
       }
 
-      game.draw = function(block, blocks){
-        for(var i = 0; i < blocks.length; i++){
+      game.draw = function (block, blocks) {
+        for (var i = 0; i < blocks.length; i++) {
           game.drawImage(blocks[i])
         }
       }
+
+
+      game.updateType = function (type, types) {
+        if (game.paused) {
+          return
+        }
+        // update
+        type.movedown()
+        //log(type.bottom[0].y)
+        for (var i = 0; i < types.length - 1; i++) {
+          if (game.collide(type, types[i])) {
+            type.stop()
+            game.refresh()
+          }
+        }
+        if (type.bottom[0].y > 300) {
+          type.stop()
+          game.refresh()
+        }
+      }
+
+      game.drawType = function (type, types) {
+        for (var i = 0; i < types.length; i++) {
+          game.drawImages(types[i])
+        }
+      }
+
+      game.collide = function (move, fixed) {
+        var h = move.bottom[0].h
+        // 底部碰到顶部
+
+        for (var i = 0; i < move.bottom.length; i++) {
+          for (var j = 0; j < fixed.top.length; j++) {
+            if (move.bottom[i].x == fixed.top[j].x) {
+              if (move.bottom[i].y + h / 2 == fixed.top[j].y - h / 2) {
+                return true
+              }
+            }
+          }
+        }
+        // 顶部碰到顶部
+
+      }
     }
-    
+
     __main()
   </script>
 </body>
