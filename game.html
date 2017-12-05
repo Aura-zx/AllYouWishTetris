@@ -31,7 +31,7 @@
     }
 
     var Block = function (game) {
-      var image = imgFromPath('red.png')
+      var image = game.imageByName('red')
       var o = {
         img: image,
         x: 100,
@@ -75,9 +75,9 @@
         status: 1,
       }
 
-      o.blocks[0] = Block()
+      o.blocks[0] = Block(game)
       for (var i = 1; i < 4; i++) {
-        var block = Block()
+        var block = Block(game)
         o.blocks.push(block)
         o.blocks[i].x = o.blocks[i - 1].x + 10
       }
@@ -178,12 +178,14 @@
       return o
     }
 
-    var GuaGame = function () {
+    var GuaGame = function (fps, images) {
+      // images is an object, contains images refname and path
       var g = {
         actions: {},
         keydowns: {},
         paused: false,
         types: [],
+        images: {},
       }
       var canvas = document.querySelector("#id-canvas")
       var context = canvas.getContext('2d')
@@ -192,7 +194,7 @@
       g.blocks = new Map()
 
       g.refresh = function () {
-        
+
       }
       // draw
       g.drawImage = function (guaImage) {
@@ -217,11 +219,14 @@
         g.actions[key] = callback
       }
 
-      var curtype = TypeI()
-      g.types.push(curtype)
+      g.imageByName = function(name){
+        var img = g.images[name]
+        return img
+      }
 
-      // timer
-      setInterval(function () {
+      var curtype = TypeI(g)
+      // main loop
+      var runloop = function () {
         // events
         var actions = Object.keys(g.actions)
         for (var i = 0; i < actions.length; i++) {
@@ -234,14 +239,14 @@
 
         if (curtype.stopped == true) {
           curtype.blocks.forEach(function (b) {
-            if (g.blocks[b.y]){
+            if (g.blocks[b.y]) {
               g.blocks[b.y].push(b)
             } else {
               g.blocks[b.y] = []
               g.blocks[b.y].push(b)
             }
           })
-          curtype = TypeI()
+          curtype = TypeI(g)
           g.types.push(curtype)
         }
 
@@ -251,13 +256,45 @@
         context.clearRect(0, 0, canvas.width, canvas.height)
         // draw
         g.drawType(curtype, g.types)
-      }, 1000 / 10)
+      }
 
+      //
+      var loads = []
+      // pre load all the images
+      var names = Object.keys(images)
+      for (var i = 0; i < names.length; i++) {
+        var name = names[i]
+        var path = images[name]
+        var img = new Image()
+        img.src = path
+        img.onload = function () {
+          // save in g.images
+          g.images[name] = img
+          // all images loaded, call run
+          loads.push(1)
+          if (loads.length == names.length) {
+            // init first type
+            curtype = TypeI(g)
+            g.types.push(curtype)
+            g.run()
+          }
+        }
+      }
+
+      // timer
+      g.run = function () {
+        setInterval(function () {
+          runloop()
+        }, 1000 / fps)
+      }
       return g;
     }
 
     var __main = function () {
-      var game = GuaGame()
+      var images = {
+        red : 'red.png'
+      }
+      var game = GuaGame(10, images)
 
       game.registerAction('a', function (block) {
         block.moveleft()
@@ -336,8 +373,9 @@
           }
         }
         // 顶部碰到顶部
-
       }
+
+      // game.run()
     }
 
     __main()
