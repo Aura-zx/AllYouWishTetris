@@ -2,7 +2,7 @@ var __main = function () {
   enableDebugMode(true)
 
   var images = {
-    red: 'red.png'
+    red: 'imgs/red.png'
   }
   var game = GuaGame(10, images)
 

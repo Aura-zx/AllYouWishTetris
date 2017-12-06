@@ -1,6 +1,5 @@
 
     var TypeI = function (game) {
-      var image = imgFromPath('red.png')
       var o = {
         blocks: [],
         x: 100,
