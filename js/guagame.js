@@ -3,7 +3,6 @@ var GuaGame = function (fps, images) {
   var g = {
     actions: {},
     keydowns: {},
-    paused: false,
     types: [],
     images: {},
   }
@@ -78,7 +77,7 @@ var GuaGame = function (fps, images) {
     g.drawType(curtype, g.types)
   }
 
-  //
+  // pointer to already loaded images
   var loads = []
   // pre load all the images
   var names = Object.keys(images)

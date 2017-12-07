@@ -13,7 +13,7 @@ var enableDebugMode = function (enable) {
   // pasue key DebugMode only
   window.addEventListener('keydown', function (event) {
     if (event.key == 'p') {
-      paused = !paused
+      window.paused = !window.paused
     }
   })
 }

@@ -1,6 +1,7 @@
 var __main = function () {
   enableDebugMode(true)
 
+  window.paused = false
   var images = {
     red: 'imgs/red.png'
   }
@@ -17,7 +18,7 @@ var __main = function () {
   })
 
   game.update = function (block, blocks) {
-    if (game.paused) {
+    if (window.paused) {
       return
     }
     // update
@@ -40,7 +41,7 @@ var __main = function () {
   }
 
   game.updateType = function (type, types) {
-    if (game.paused) {
+    if (window.paused) {
       return
     }
     // update
@@ -79,4 +80,6 @@ var __main = function () {
     }
     // 顶部碰到顶部
   }
+
+  
 }
