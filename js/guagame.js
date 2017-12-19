@@ -43,7 +43,7 @@ var GuaGame = function (fps, images) {
     return img
   }
 
-  var curtype = TypeI(g)
+  g.curtype = TypeI(g)
   // main loop
   var runloop = function () {
     // events
@@ -52,12 +52,12 @@ var GuaGame = function (fps, images) {
       var key = actions[i]
       if (g.keydowns[key]) {
         // 如果按键被按下, 调用注册的 action
-        g.actions[key](curtype)
+        g.actions[key](g.curtype)
       }
     }
 
-    if (curtype.stopped == true) {
-      curtype.blocks.forEach(function (b) {
+    if (g.curtype.stopped == true) {
+      g.curtype.blocks.forEach(function (b) {
         if (g.blocks[b.y]) {
           g.blocks[b.y].push(b)
         } else {
@@ -65,16 +65,16 @@ var GuaGame = function (fps, images) {
           g.blocks[b.y].push(b)
         }
       })
-      curtype = TypeI(g)
-      g.types.push(curtype)
+      g.curtype = TypeI(g)
+      g.types.push(g.curtype)
     }
 
     // draw
-    g.updateType(curtype, g.types)
+    g.updateType(g.curtype, g.types)
     // clear
     context.clearRect(0, 0, canvas.width, canvas.height)
     // draw
-    g.drawType(curtype, g.types)
+    g.drawType(g.curtype, g.types)
   }
 
   // pointer to already loaded images
@@ -93,8 +93,8 @@ var GuaGame = function (fps, images) {
       loads.push(1)
       if (loads.length == names.length) {
         // init first type
-        curtype = TypeI(g)
-        g.types.push(curtype)
+        g.curtype = TypeI(g)
+        g.types.push(g.curtype)
         g.run()
       }
     }
@@ -106,5 +106,6 @@ var GuaGame = function (fps, images) {
       runloop()
     }, 1000 / fps)
   }
+
   return g;
 }

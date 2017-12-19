@@ -24,5 +24,12 @@ var Block = function (game) {
   o.stop = function () {
     o.stopped = true
   }
+  o.hasPoint = function (x, y) {
+    var xIn = x >= o.x - o.w && x <= o.x + o.w
+    var yIn = y >= o.y - o.h && y <= o.y + o.h
+
+    return xIn && yIn
+  }
+
   return o
 }

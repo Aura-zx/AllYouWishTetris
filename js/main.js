@@ -1,4 +1,5 @@
 var __main = function () {
+
   enableDebugMode(true)
 
   window.paused = false
@@ -6,6 +7,34 @@ var __main = function () {
     red: 'imgs/red.png'
   }
   var game = GuaGame(10, images)
+
+  // mouse event
+  var enableDrag = false
+  game.canvas.addEventListener('mousedown', function (event) {
+    var x = event.offsetX
+    var y = event.offsetY
+    // check if point in types
+    if (game.curtype.hasPoint(x, y)) {
+      // set dragflag
+      enableDrag = true
+    }
+  })
+
+  game.canvas.addEventListener('mousemove', function (event) {
+    var x = event.offsetX
+    var y = event.offsetY
+    // change position of type
+    if (enableDrag){
+      game.curtype.reset(x, y)
+    }
+  })
+
+  game.canvas.addEventListener('mouseup', function (event) {
+    var x = event.offsetX
+    var y = event.offsetY
+    enableDrag = false
+
+  })
 
   game.registerAction('a', function (block) {
     block.moveleft()
@@ -81,5 +110,5 @@ var __main = function () {
     // 顶部碰到顶部
   }
 
-  
+
 }
